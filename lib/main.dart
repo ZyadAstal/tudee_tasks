@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'database/hive_service.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_task_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  // Initialize Hive CE
-  final hiveService = HiveService();
-  await hiveService.init();
-
-  // Check login state via SharedPreferences
   final prefs = await SharedPreferences.getInstance();
   final String? savedName = prefs.getString('userName');
   final bool isLoggedIn = savedName != null && savedName.trim().isNotEmpty;

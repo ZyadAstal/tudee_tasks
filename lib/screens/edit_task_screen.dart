@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import '../database/hive_service.dart';
+import '../database/firestore_service.dart';
 import '../database/todo.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 
 class EditTaskScreen extends StatefulWidget {
-  final int index;
   final Todo task;
 
   const EditTaskScreen({
     super.key,
-    required this.index,
     required this.task,
   });
 
@@ -20,7 +18,7 @@ class EditTaskScreen extends StatefulWidget {
 }
 
 class _EditTaskScreenState extends State<EditTaskScreen> {
-  final HiveService hiveService = HiveService();
+  final FirestoreService firestoreService = FirestoreService();
   late TextEditingController _titleController;
   late bool _isDone;
 
@@ -50,11 +48,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     }
 
     final updatedTask = Todo(
+      id: widget.task.id,
       title: updatedTitle,
       isComplete: _isDone,
     );
 
-    await hiveService.updateTask(widget.index, updatedTask);
+    await firestoreService.updateTask(updatedTask);
 
     if (mounted) {
       Navigator.pop(context, true);
@@ -82,7 +81,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     );
 
     if (confirm == true) {
-      await hiveService.deleteTask(widget.index);
+      await firestoreService.deleteTask(widget.task.id);
       if (mounted) {
         Navigator.pop(context, true);
       }

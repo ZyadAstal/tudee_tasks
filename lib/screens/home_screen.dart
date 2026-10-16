@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../database/hive_service.dart';
+import '../database/firestore_service.dart';
 import '../database/todo.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/status_card.dart';
@@ -16,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final HiveService hiveService = HiveService();
+  final FirestoreService firestoreService = FirestoreService();
   String name = 'Zyad';
 
   @override
@@ -32,21 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _navigateToEditTask(int index, Todo task) {
+  void _navigateToEditTask(Todo task) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditTaskScreen(index: index, task: task),
+        builder: (context) => EditTaskScreen(task: task),
       ),
     );
   }
 
-  void _toggleTask(int index, Todo task) async {
+  void _toggleTask(Todo task) async {
     final updated = Todo(
+      id: task.id,
       title: task.title,
       isComplete: !task.isComplete,
     );
-    await hiveService.updateTask(index, updated);
+    await firestoreService.updateTask(updated);
   }
 
   @override
@@ -54,10 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Color(0xFFFAF0EC),
       appBar: CustomAppBar(),
-      body: ValueListenableBuilder<Box>(
-        valueListenable: hiveService.box.listenable(),
-        builder: (context, box, child) {
-          final tasks = hiveService.getTasks();
+      body: StreamBuilder<List<Todo>>(
+        stream: firestoreService.getTasks(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF38B4EE)),
+            );
+          }
+
+          final tasks = snapshot.data ?? [];
           final int doneCount = tasks.where((t) => t.isComplete).length;
           final int todoCount = tasks.where((t) => !t.isComplete).length;
 
@@ -156,10 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   TaskItemCard(
                     task: tasks[i],
                     onTap: () {
-                      _toggleTask(i, tasks[i]);
+                      _toggleTask(tasks[i]);
                     },
                     onEdit: () {
-                      _navigateToEditTask(i, tasks[i]);
+                      _navigateToEditTask(tasks[i]);
                     },
                   ),
             ],

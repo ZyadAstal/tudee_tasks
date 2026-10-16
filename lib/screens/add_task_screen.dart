@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../database/hive_service.dart';
+import '../database/firestore_service.dart';
 import '../database/todo.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -9,7 +9,7 @@ class AddTaskScreen extends StatelessWidget {
   AddTaskScreen({super.key});
 
   final TextEditingController taskController = TextEditingController();
-  final HiveService hiveService = HiveService();
+  final FirestoreService firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,7 @@ class AddTaskScreen extends StatelessWidget {
                     title: text,
                     isComplete: false,
                   );
-                  await hiveService.addTask(newTodo);
+                  await firestoreService.addTask(newTodo);
                   if (context.mounted) {
                     Navigator.pop(context, true);
                   }
